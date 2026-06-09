@@ -64,9 +64,9 @@ export class AIService {
         3. Si la pregunta es sobre decisiones estratégicas, sugiere contramedidas basadas en el estado del CMI.
       `;
 
-      // 2. Call Gemini with fallback logic
+      // 2. Call Gemini with fallback logic (Updated for June 2026 models)
       const genAI = new GoogleGenerativeAI(apiKey);
-      const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+      const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
       let lastError;
 
       for (const modelName of modelsToTry) {
