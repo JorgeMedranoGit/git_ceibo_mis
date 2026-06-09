@@ -37,9 +37,10 @@ export class AIService {
       return "⚠️ No se ha detectado una API Key de Gemini en el archivo .env. Para usar el agente inteligente real, por favor agrega `GEMINI_API_KEY=tu_clave_aqui` en el archivo .env y reinicia el servidor. \n\nPor ahora, sigo siendo tu asistente automatizado local: pregúntame sobre 'ventas', 'empleados' o 'producción'.";
     }
 
+    let summary;
     try {
       // 1. Gather context from the database
-      const summary = await DashboardService.getCMISummary();
+      summary = await DashboardService.getCMISummary();
       const dbContext = `
         Estás actuando como el Asistente Experto del Sistema Ceibo (una cooperativa de cacao orgánico). 
         Tienes acceso a los siguientes datos en tiempo real:
@@ -59,7 +60,7 @@ export class AIService {
 
       // 2. Call Gemini
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Changed model version
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use a valid model name
       
       const result = await model.generateContent(dbContext);
       const response = await result.response;
@@ -69,7 +70,11 @@ export class AIService {
       console.error("Error connecting to Gemini API:", error);
       
       // Fallback logic if the API key is completely invalid or the model is still not found
-      return "Hubo un problema al conectar con la API de Gemini (Error de Autenticación o Modelo). Revisa que tu clave en .env comience por 'AIzaSy...'. \n\nSin embargo, analizando tus datos locales: El Sistema Ceibo tiene un cumplimiento del " + summary.averageProgress + "%. Revisa el módulo de Ventas (" + summary.moduleStatus.sales?.ingresosTotales + ") y Producción (" + summary.moduleStatus.production?.eficienciaPlanta + ") para detectar cuellos de botella.";
+      const progress = summary?.averageProgress || "desconocido";
+      const sales = summary?.moduleStatus.sales?.ingresosTotales || "sin datos";
+      const efficiency = summary?.moduleStatus.production?.eficienciaPlanta || "sin datos";
+
+      return `Hubo un problema al conectar con la API de Gemini (Error de Autenticación o Modelo). Revisa que tu clave en .env comience por 'AIzaSy...'. \n\nSin embargo, analizando tus datos locales: El Sistema Ceibo tiene un cumplimiento del ${progress}%. Revisa el módulo de Ventas (${sales}) y Producción (${efficiency}) para detectar cuellos de botella.`;
     }
   }
 
