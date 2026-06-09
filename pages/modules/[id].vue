@@ -144,6 +144,63 @@
               </div>
               <label>Balance de Competencias (Soft vs Hard)</label>
             </div>
+
+            <!-- VISTA SUMINISTRO: STOCK Y LEAD TIME -->
+            <div v-if="$route.params.id === 'supply'" class="olap-double-viz">
+              <div class="olap-viz supply-stock">
+                <div class="stock-bars">
+                  <div class="stock-item"><div class="s-bar" style="height: 80%"></div><span>Grano</span></div>
+                  <div class="stock-item"><div class="s-bar warning" style="height: 40%"></div><span>Empaque</span></div>
+                  <div class="stock-item"><div class="s-bar" style="height: 65%"></div><span>Insumos</span></div>
+                </div>
+                <label>Nivel de Stock Crítico</label>
+              </div>
+              <div class="olap-viz lead-time">
+                <div class="lt-circle"><span>4.2d</span></div>
+                <label>Lead Time Promedio</label>
+              </div>
+            </div>
+
+            <!-- VISTA INTERNACIONALIZACIÓN: MAPA Y MIX -->
+            <div v-if="$route.params.id === 'intl'" class="olap-double-viz">
+              <div class="olap-viz intl-regions">
+                <div class="region-dots">
+                  <div class="dot" style="top:20%; left:30%" title="EU"></div>
+                  <div class="dot active" style="top:50%; left:80%" title="Asia"></div>
+                  <div class="dot" style="top:60%; left:15%" title="Latam"></div>
+                </div>
+                <label>Penetración de Mercados</label>
+              </div>
+              <div class="olap-viz export-mix">
+                <div class="mix-bars">
+                  <div class="mix-row"><div class="mix-fill" style="width:70%"></div><span>Premium</span></div>
+                  <div class="mix-row"><div class="mix-fill" style="width:30%"></div><span>Industrial</span></div>
+                </div>
+                <label>Mix de Exportación (%)</label>
+              </div>
+            </div>
+
+            <!-- VISTA ESTRATEGIA: ALINEACIÓN Y AVANCE -->
+            <div v-if="$route.params.id === 'strategy'" class="olap-double-viz">
+              <div class="olap-viz strat-align">
+                <div class="align-ring">
+                  <svg viewBox="0 0 36 36" class="circular-chart green">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path class="circle" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <text x="18" y="20.35" class="percentage">85%</text>
+                  </svg>
+                </div>
+                <label>Alineación con Visión 2030</label>
+              </div>
+              <div class="olap-viz strat-milestones">
+                <div class="milestone-list">
+                  <div class="ms-item done">✓ Certificación</div>
+                  <div class="ms-item active">⚡ Expansión Planta</div>
+                  <div class="ms-item">○ Mercado China</div>
+                </div>
+                <label>Hitos del Trimestre</label>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -924,4 +981,99 @@ function getIcon(key) {
   transform: translate(-50%, -50%);
   clip-path: polygon(50% 10%, 90% 40%, 70% 80%, 20% 70%, 10% 30%);
 }
+/* NUEVOS ESTILOS PARA OLAP DOBLE (Suministro, Intl, Estrategia) */
+.olap-double-viz {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+/* SUPPLY - STOCK BARS */
+.supply-stock .stock-bars {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  height: 80px;
+  align-items: flex-end;
+}
+.stock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 30%;
+}
+.s-bar {
+  width: 20px;
+  background: var(--ctp-green);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s;
+}
+.s-bar.warning { background: var(--ctp-yellow); }
+.stock-item span { font-size: 0.6rem; color: var(--ctp-subtext0); }
+
+/* SUPPLY - LEAD TIME */
+.lt-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 4px solid var(--ctp-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: var(--ctp-text);
+  font-size: 1.1rem;
+  box-shadow: inset 0 0 10px rgba(137, 180, 250, 0.2);
+}
+
+/* INTL - REGIONS MAP SIM */
+.intl-regions {
+  position: relative;
+  background: var(--ctp-surface0) !important;
+  border: 1px dashed var(--ctp-surface2);
+}
+.region-dots {
+  position: relative;
+  width: 100%;
+  height: 80px;
+}
+.dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--ctp-surface2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.dot.active {
+  background: var(--ctp-green);
+  box-shadow: 0 0 10px var(--ctp-green);
+  transform: scale(1.2);
+}
+
+/* INTL - EXPORT MIX */
+.export-mix { justify-content: center; }
+.mix-bars { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.mix-row { display: flex; align-items: center; gap: 10px; font-size: 0.7rem; color: var(--ctp-subtext0); }
+.mix-fill { height: 12px; background: var(--ctp-mauve); border-radius: 6px; }
+.mix-row:last-child .mix-fill { background: var(--ctp-surface2); }
+
+/* STRATEGY - ALIGNMENT RING */
+.align-ring { width: 80px; height: 80px; }
+.circular-chart { display: block; margin: 0 auto; max-width: 100%; max-height: 250px; }
+.circle-bg { fill: none; stroke: var(--ctp-surface1); stroke-width: 3.8; }
+.circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+@keyframes progress { 0% { stroke-dasharray: 0 100; } }
+.circular-chart.green .circle { stroke: var(--ctp-green); }
+.percentage { fill: var(--ctp-text); font-family: sans-serif; font-size: 0.5em; text-anchor: middle; font-weight: bold; }
+
+/* STRATEGY - MILESTONES */
+.strat-milestones { align-items: flex-start; }
+.milestone-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.ms-item { font-size: 0.75rem; color: var(--ctp-subtext0); padding: 4px; border-radius: 4px; background: var(--ctp-surface0); }
+.ms-item.done { color: var(--ctp-green); text-decoration: line-through; opacity: 0.7; }
+.ms-item.active { border-left: 3px solid var(--ctp-yellow); color: var(--ctp-text); font-weight: bold; background: var(--ctp-surface1); }
 </style>
