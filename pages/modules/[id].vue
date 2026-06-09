@@ -719,7 +719,7 @@ function getIcon(key) {
 
 .animate-pop { animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-</style>
+
 /* ESTILOS OLAP ANALYTICS */
 .olap-analytics {
   margin-top: 30px;
