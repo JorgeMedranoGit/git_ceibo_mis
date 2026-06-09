@@ -42,7 +42,45 @@
         </section>
       </div>
 
-      <!-- GRID DE INDICADORES INTERACTIVOS -->
+      <!-- GRID DE INDICADORES INTERACTIVOS CON MARGEN -->
+      <div class="section-divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">Indicadores Estratégicos (KPI / KMI)</span>
+      </div>
+
+      <!-- NUEVA SECCIÓN DE GRÁFICOS ANALÍTICOS -->
+      <div class="charts-row secondary-charts">
+        <section class="performance-compare card-base">
+          <h3>📊 Desempeño Comparativo</h3>
+          <div class="comparison-bars">
+            <div v-for="m in topMetrics" :key="m.id" class="comp-bar-item">
+              <div class="comp-label">{{ m.name }}</div>
+              <div class="comp-track">
+                <div class="comp-fill" :style="{ width: Math.round((m.currentValue/m.targetValue)*100) + '%' }" :class="m.status"></div>
+                <span class="comp-val">{{ Math.round((m.currentValue/m.targetValue)*100) }}%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="efficiency-trend card-base">
+          <h3>⚡ Tendencia de Eficiencia</h3>
+          <div class="trend-line-sim">
+            <svg viewBox="0 0 400 150" class="trend-svg">
+              <path d="M0,120 Q50,110 100,90 T200,60 T300,40 T400,30" fill="none" stroke="var(--ctp-green)" stroke-width="3" />
+              <circle cx="0" cy="120" r="4" fill="var(--ctp-green)" />
+              <circle cx="100" cy="90" r="4" fill="var(--ctp-green)" />
+              <circle cx="200" cy="60" r="4" fill="var(--ctp-green)" />
+              <circle cx="300" cy="40" r="4" fill="var(--ctp-green)" />
+              <circle cx="400" cy="30" r="4" fill="var(--ctp-green)" />
+            </svg>
+            <div class="trend-labels">
+              <span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <div class="metrics-grid">
         <PerspectivesObjectiveCard 
           v-for="metric in metrics" 
@@ -119,6 +157,12 @@ const selectedMetric = ref(null);
 const optimalCount = computed(() => metrics.value?.filter(m => m.status === 'optimal').length || 0);
 const warningCount = computed(() => metrics.value?.filter(m => m.status === 'warning').length || 0);
 const criticalCount = computed(() => metrics.value?.filter(m => m.status === 'critical').length || 0);
+
+const topMetrics = computed(() => {
+  if (!metrics.value) return [];
+  // Take 4 representative metrics for the comparison chart
+  return metrics.value.slice(0, 4);
+});
 
 function openModal(metric) {
   selectedMetric.value = metric;
@@ -353,4 +397,100 @@ function getActionPlan(status) {
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 @media (max-width: 1200px) { .charts-row { grid-template-columns: 1fr; } }
+
+/* NUEVOS ESTILOS PARA GRÁFICOS SECUNDARIOS Y DIVISORES */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 40px 0 20px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ctp-surface1), transparent);
+}
+
+.divider-text {
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--ctp-overlay1);
+  letter-spacing: 2px;
+}
+
+.secondary-charts {
+  margin-bottom: 30px;
+}
+
+.comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.comp-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comp-label {
+  font-size: 0.75rem;
+  color: var(--ctp-subtext0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comp-track {
+  height: 12px;
+  background: var(--ctp-mantle);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.comp-fill {
+  height: 100%;
+  border-radius: 6px;
+}
+.comp-fill.optimal { background: var(--ctp-green); }
+.comp-fill.warning { background: var(--ctp-yellow); }
+.comp-fill.critical { background: var(--ctp-red); }
+
+.comp-val {
+  position: absolute;
+  right: 10px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--ctp-text);
+  text-shadow: 0 0 5px var(--ctp-base);
+}
+
+.trend-line-sim {
+  height: 150px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.trend-svg {
+  width: 100%;
+  height: 120px;
+}
+
+.trend-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 5px;
+  font-size: 0.65rem;
+  color: var(--ctp-overlay1);
+  font-weight: bold;
+}
 </style>
