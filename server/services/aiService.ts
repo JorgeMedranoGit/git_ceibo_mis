@@ -37,10 +37,16 @@ export class AIService {
       return "⚠️ No se ha detectado una API Key de Gemini en el archivo .env. Para usar el agente inteligente real, por favor agrega `GEMINI_API_KEY=tu_clave_aqui` en el archivo .env y reinicia el servidor. \n\nPor ahora, sigo siendo tu asistente automatizado local: pregúntame sobre 'ventas', 'empleados' o 'producción'.";
     }
 
-    let summary;
+    let summary = { averageProgress: 0, moduleStatus: { sales: { ingresosTotales: "0" }, production: { eficienciaPlanta: "0" }, finance: { balanceCaja: "0" }, hr: { totalEmpleados: 0 } } };
+    
     try {
       // 1. Gather context from the database
-      summary = await DashboardService.getCMISummary();
+      try {
+        summary = await DashboardService.getCMISummary();
+      } catch (dbError) {
+        console.error("Database error in AIService:", dbError);
+      }
+
       const dbContext = `
         Estás actuando como el Asistente Experto del Sistema Ceibo (una cooperativa de cacao orgánico). 
         Tienes acceso a los siguientes datos en tiempo real:
@@ -58,23 +64,34 @@ export class AIService {
         3. Si la pregunta es sobre decisiones estratégicas, sugiere contramedidas basadas en el estado del CMI.
       `;
 
-      // 2. Call Gemini
+      // 2. Call Gemini with fallback logic
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use a valid model name
-      
-      const result = await model.generateContent(dbContext);
-      const response = await result.response;
-      return response.text();
+      const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+      let lastError;
 
-    } catch (error) {
-      console.error("Error connecting to Gemini API:", error);
+      for (const modelName of modelsToTry) {
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(dbContext);
+          const response = await result.response;
+          return response.text();
+        } catch (apiError: any) {
+          lastError = apiError;
+          console.warn(`Model ${modelName} failed, trying next...`, apiError.message);
+          continue; // Try next model
+        }
+      }
       
-      // Fallback logic if the API key is completely invalid or the model is still not found
-      const progress = summary?.averageProgress || "desconocido";
-      const sales = summary?.moduleStatus.sales?.ingresosTotales || "sin datos";
-      const efficiency = summary?.moduleStatus.production?.eficienciaPlanta || "sin datos";
+      throw lastError; // If all models fail
 
-      return `Hubo un problema al conectar con la API de Gemini (Error de Autenticación o Modelo). Revisa que tu clave en .env comience por 'AIzaSy...'. \n\nSin embargo, analizando tus datos locales: El Sistema Ceibo tiene un cumplimiento del ${progress}%. Revisa el módulo de Ventas (${sales}) y Producción (${efficiency}) para detectar cuellos de botella.`;
+    } catch (error: any) {
+      console.error("All Gemini models failed:", error);
+      
+      const progress = summary?.averageProgress ?? "desconocido";
+      const sales = summary?.moduleStatus.sales?.ingresosTotales ?? "sin datos";
+      const efficiency = summary?.moduleStatus.production?.eficienciaPlanta ?? "sin datos";
+
+      return `⚠️ La IA está teniendo problemas técnicos (Error: ${error.message || 'Desconocido'}). \n\nSin embargo, aquí están tus datos actuales: El Sistema Ceibo tiene un cumplimiento del ${progress}%. Revisa el módulo de Ventas (${sales}) y Producción (${efficiency}) para detectar cuellos de botella.`;
     }
   }
 
