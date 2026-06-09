@@ -87,6 +87,52 @@
               </button>
             </div>
           </div>
+          
+          <!-- SECCIÓN DE ANALÍTICA OLAP ESPECÍFICA -->
+          <div class="olap-analytics animate-in">
+            <header class="olap-header">
+              <h4>📊 Análisis Multidimensional (OLAP)</h4>
+              <span class="olap-tag">Live Data</span>
+            </header>
+            
+            <!-- VISTA VENTAS: EMBUDO DE CONVERSIÓN -->
+            <div v-if="$route.params.id === 'sales'" class="olap-viz sales-funnel">
+              <div class="funnel-step tier1"><span>Prospectos: 1,250</span></div>
+              <div class="funnel-step tier2"><span>Cotizaciones: 480</span></div>
+              <div class="funnel-step tier3"><span>Cierre: 124</span></div>
+              <label>Embudo de Ventas Internacionales</label>
+            </div>
+
+            <!-- VISTA PRODUCCIÓN: CARGA DE PLANTA -->
+            <div v-if="$route.params.id === 'production'" class="olap-viz plant-gauge">
+              <div class="gauge-container">
+                <div class="gauge-bar" style="transform: rotate(145deg)"></div>
+                <div class="gauge-center">92%</div>
+              </div>
+              <label>Utilización de Maquinaria (Tostadoras)</label>
+            </div>
+
+            <!-- VISTA FINANZAS: COMPOSICIÓN DE GASTOS -->
+            <div v-if="$route.params.id === 'finance'" class="olap-viz finance-pie">
+              <div class="pie-chart-sim">
+                <div class="pie-slice" style="--p:45;--c:var(--ctp-green)"></div>
+                <div class="pie-slice" style="--p:30;--c:var(--ctp-blue)"></div>
+                <div class="pie-slice" style="--p:25;--c:var(--ctp-mauve)"></div>
+              </div>
+              <div class="pie-legend">
+                <span><i style="background:var(--ctp-green)"></i> OpEx (45%)</span>
+                <span><i style="background:var(--ctp-blue)"></i> Inversión (30%)</span>
+              </div>
+            </div>
+
+            <!-- VISTA RRHH: DISTRIBUCIÓN DE TALENTO -->
+            <div v-if="$route.params.id === 'hr'" class="olap-viz hr-radar">
+              <div class="radar-sim">
+                <div class="radar-poly"></div>
+              </div>
+              <label>Balance de Competencias (Soft vs Hard)</label>
+            </div>
+          </div>
         </section>
 
         <div class="charts-column">
@@ -510,4 +556,166 @@ function getIcon(key) {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 1100px) { .analysis-grid { grid-template-columns: 1fr; } }
+
+/* ESTILOS OLAP ANALYTICS */
+.olap-analytics {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid var(--ctp-surface1);
+}
+
+.olap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.olap-header h4 {
+  margin: 0;
+  color: var(--ctp-subtext1);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.olap-tag {
+  background: var(--ctp-green);
+  color: var(--ctp-base);
+  font-size: 0.6rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 900;
+}
+
+.olap-viz {
+  background: var(--ctp-mantle);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.olap-viz label {
+  font-size: 0.75rem;
+  color: var(--ctp-overlay1);
+  font-weight: bold;
+}
+
+/* SALES FUNNEL */
+.sales-funnel {
+  gap: 5px;
+}
+
+.funnel-step {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ctp-base);
+  font-weight: 900;
+  font-size: 0.8rem;
+  clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+  margin-bottom: 2px;
+}
+
+.tier1 { background: var(--ctp-green); width: 100%; }
+.tier2 { background: var(--ctp-teal); width: 80%; }
+.tier3 { background: var(--ctp-blue); width: 60%; }
+
+/* PLANT GAUGE */
+.gauge-container {
+  position: relative;
+  width: 150px;
+  height: 75px;
+  background: var(--ctp-surface1);
+  border-radius: 150px 150px 0 0;
+  overflow: hidden;
+}
+
+.gauge-bar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--ctp-green);
+  transform-origin: center top;
+  transition: transform 1s ease-in-out;
+}
+
+.gauge-center {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 50px;
+  background: var(--ctp-mantle);
+  border-radius: 100px 100px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 5px;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: var(--ctp-green);
+}
+
+/* FINANCE PIE */
+.pie-chart-sim {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ctp-green) 0% 45%,
+    var(--ctp-blue) 45% 75%,
+    var(--ctp-mauve) 75% 100%
+  );
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.pie-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+}
+
+.pie-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* HR RADAR */
+.radar-sim {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, var(--ctp-surface1) 20%, transparent 20%),
+              radial-gradient(circle, var(--ctp-surface1) 40%, transparent 40%),
+              radial-gradient(circle, var(--ctp-surface1) 60%, transparent 60%);
+  border: 1px solid var(--ctp-surface1);
+  position: relative;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+.radar-poly {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 80%; height: 80%;
+  background: rgba(166, 226, 46, 0.3);
+  border: 2px solid var(--ctp-green);
+  transform: translate(-50%, -50%);
+  clip-path: polygon(50% 10%, 90% 40%, 70% 80%, 20% 70%, 10% 30%);
+}
 </style>
