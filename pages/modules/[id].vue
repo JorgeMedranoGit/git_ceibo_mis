@@ -58,7 +58,23 @@
         </div>
       </div>
 
-      <div class="analysis-grid">
+      <!-- PROTECCIÓN DE VISTA ADMIN (SIMULADA) -->
+      <div v-if="!isAuthenticated" class="admin-login-overlay">
+        <div class="login-card animate-pop">
+          <h3>🔐 Acceso Restringido: Admin</h3>
+          <p>Ingresa la contraseña maestra para ver analítica avanzada.</p>
+          <input 
+            type="password" 
+            v-model="passwordInput" 
+            placeholder="Password"
+            @keyup.enter="checkLogin"
+          />
+          <button @click="checkLogin">Entrar al Sistema</button>
+          <p v-if="loginError" class="error-msg">Contraseña incorrecta</p>
+        </div>
+      </div>
+
+      <div v-else class="analysis-grid">
         <!-- ÁRBOL DE DECISIÓN FUNCIONAL -->
         <section class="strategic-box">
           <h3>🧠 Centro de Mando: Acciones Estratégicas</h3>
@@ -106,7 +122,7 @@
             <!-- VISTA PRODUCCIÓN: CARGA DE PLANTA -->
             <div v-if="$route.params.id === 'production'" class="olap-viz plant-gauge">
               <div class="gauge-container">
-                <div class="gauge-bar" style="transform: rotate(145deg)"></div>
+                <div class="gauge-bar" :style="{ transform: `rotate(${Math.min(180, 140 + Math.random() * 30)}deg)` }"></div>
                 <div class="gauge-center">92%</div>
               </div>
               <label>Utilización de Maquinaria (Tostadoras)</label>
@@ -147,20 +163,37 @@
             </div>
           </section>
 
-          <!-- NUEVO GRÁFICO: DISPERSIÓN DE EFICIENCIA -->
+          <!-- MATRIZ DE RIESGO DINÁMICA POR MÓDULO -->
           <section class="module-trends scatter-box">
-            <h3>🎯 Matriz de Eficiencia vs Riesgo</h3>
+            <h3>🎯 Matriz de Riesgo: {{ $route.params.id.toUpperCase() }}</h3>
             <div class="scatter-plot">
               <div class="quadrants">
-                <div class="quadrant q1"><span>Alto Riesgo / Baja Efi.</span></div>
-                <div class="quadrant q2"><span>Alto Riesgo / Alta Efi.</span></div>
-                <div class="quadrant q3"><span>Bajo Riesgo / Baja Efi.</span></div>
-                <div class="quadrant q4"><span>Bajo Riesgo / Alta Efi. (Ideal)</span></div>
+                <div class="quadrant q1"><span>Peligro</span></div>
+                <div class="quadrant q2"><span>Inestable</span></div>
+                <div class="quadrant q3"><span>Lento</span></div>
+                <div class="quadrant q4"><span>Líder</span></div>
               </div>
-              <div class="scatter-point" style="bottom: 80%; left: 75%;" title="Métrica Crítica"></div>
-              <div class="scatter-point" style="bottom: 45%; left: 30%;" title="Alerta"></div>
-              <div class="scatter-point" style="bottom: 20%; left: 85%;" title="Óptimo"></div>
+              <!-- Puntos dinámicos basados en el módulo -->
+              <div 
+                v-for="(p, idx) in riskPoints" 
+                :key="idx" 
+                class="scatter-point" 
+                :style="{ bottom: p.y + '%', left: p.x + '%' }"
+                :class="p.status"
+                :title="p.label"
+              >
+                <div class="point-tooltip">{{ p.label }}</div>
+              </div>
             </div>
+          </section>
+
+          <!-- NUEVO: HEATMAP DE CARGA OPERATIVA -->
+          <section class="module-trends heatmap-box">
+            <h3>🔥 Mapa de Calor: Carga de Trabajo</h3>
+            <div class="heatmap-grid">
+              <div v-for="n in 24" :key="n" class="heat-cell" :style="{ opacity: 0.2 + Math.random() * 0.8 }"></div>
+            </div>
+            <div class="heatmap-labels"><span>Turno Mañana</span><span>Turno Tarde</span><span>Turno Noche</span></div>
           </section>
         </div>
       </div>
@@ -219,6 +252,48 @@ const { data: moduleKPIsData } = await useFetch(() => `/api/objectives?perspecti
 const showKPIEditor = ref(false);
 const updatingId = ref(null);
 const executing = ref(false);
+
+// LOGIN LOGIC (ADMIN PROTECTED)
+const isAuthenticated = ref(false);
+const passwordInput = ref('');
+const loginError = ref(false);
+
+function checkLogin() {
+  if (passwordInput.value === 'elceiboadmin') {
+    isAuthenticated.value = true;
+    loginError.value = false;
+  } else {
+    loginError.value = true;
+  }
+}
+
+// MATRIZ DE RIESGO DINÁMICA
+const riskPoints = computed(() => {
+  const mod = route.params.id;
+  const basePoints = {
+    sales: [
+      { x: 85, y: 20, label: 'Exportación EU', status: 'optimal' },
+      { x: 40, y: 70, label: 'Logística Asia', status: 'warning' },
+      { x: 15, y: 85, label: 'Ventas Locales', status: 'critical' }
+    ],
+    production: [
+      { x: 90, y: 15, label: 'Tostado', status: 'optimal' },
+      { x: 65, y: 40, label: 'Prensado', status: 'warning' },
+      { x: 30, y: 80, label: 'Empaque', status: 'critical' }
+    ],
+    finance: [
+      { x: 75, y: 30, label: 'Liquidez', status: 'optimal' },
+      { x: 50, y: 55, label: 'Cuentas x Cobrar', status: 'warning' },
+      { x: 20, y: 90, label: 'Deuda Bancaria', status: 'critical' }
+    ],
+    hr: [
+      { x: 80, y: 25, label: 'Formación Técnica', status: 'optimal' },
+      { x: 45, y: 60, label: 'Clima Laboral', status: 'warning' },
+      { x: 10, y: 75, label: 'Rotación', status: 'critical' }
+    ]
+  };
+  return basePoints[mod] || basePoints.sales;
+});
 
 const moduleData = computed(() => {
   if (!summary.value?.moduleStatus) return null;
@@ -552,11 +627,99 @@ function getIcon(key) {
 .btn-outline { background: none; border: 1px solid var(--ctp-surface2); color: var(--ctp-text); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
 .btn-outline:hover { border-color: var(--ctp-green); }
 
-.animate-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+/* NUEVOS ESTILOS: LOGIN ADMIN Y HEATMAP */
+.admin-login-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
 
-@media (max-width: 1100px) { .analysis-grid { grid-template-columns: 1fr; } }
+.login-card {
+  background: var(--ctp-surface0);
+  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid var(--ctp-green);
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 0 50px rgba(166, 226, 46, 0.2);
+}
 
+.login-card h3 { color: var(--ctp-green); margin-bottom: 10px; }
+.login-card p { font-size: 0.9rem; color: var(--ctp-overlay1); margin-bottom: 25px; }
+
+.login-card input {
+  width: 100%;
+  background: var(--ctp-mantle);
+  border: 1px solid var(--ctp-surface1);
+  color: var(--ctp-text);
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.login-card button {
+  width: 100%;
+  background: var(--ctp-green);
+  color: var(--ctp-base);
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.error-msg { color: var(--ctp-red); margin-top: 15px; font-weight: bold; }
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.heat-cell {
+  height: 30px;
+  background: var(--ctp-green);
+  border-radius: 4px;
+}
+
+.heatmap-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.65rem;
+  color: var(--ctp-overlay1);
+}
+
+.point-tooltip {
+  position: absolute;
+  top: -30px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--ctp-base);
+  color: var(--ctp-text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border: 1px solid var(--ctp-surface1);
+}
+
+.scatter-point:hover .point-tooltip { opacity: 1; }
+
+.animate-pop { animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+</style>
 /* ESTILOS OLAP ANALYTICS */
 .olap-analytics {
   margin-top: 30px;
