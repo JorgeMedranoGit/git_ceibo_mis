@@ -14,15 +14,25 @@
         </div>
       </header>
 
-      <!-- EDITOR DE KPIs RÁPIDO -->
+      <!-- EDITOR DE KPIs AVANZADO -->
       <section v-if="showKPIEditor" class="kpi-editor animate-in">
-        <h3>✏️ Panel de Control Estratégico</h3>
-        <p>Ajusta el porcentaje de cumplimiento. El sistema calculará el valor ejecutado y actualizará los semáforos.</p>
+        <header class="editor-header">
+          <h3>🎮 Simulador de Escenarios Estratégicos</h3>
+          <div class="preset-actions">
+            <button class="btn-mini" @click="applyPreset('optimal')">✨ Escenario Optimista</button>
+            <button class="btn-mini" @click="applyPreset('critical')">🚨 Escenario de Crisis</button>
+          </div>
+        </header>
+        <p>Ajusta el rendimiento para predecir el impacto en el CMI global. El sistema recalcula riesgos en tiempo real.</p>
+        
         <div class="editor-grid">
           <div v-for="kpi in moduleKPIs" :key="kpi.id" class="editor-row">
             <div class="kpi-label-group">
               <label>{{ kpi.name }}</label>
-              <span class="meta-label">Meta: {{ kpi.targetValue }} {{ kpi.unit }}</span>
+              <div class="meta-row">
+                <span class="meta-label">Meta: {{ kpi.targetValue }} {{ kpi.unit }}</span>
+                <span class="type-tag-mini" :class="kpi.type">{{ kpi.type }}</span>
+              </div>
             </div>
             
             <div class="range-wrap">
@@ -30,8 +40,8 @@
                 type="range" 
                 v-model.number="kpi.simulatedPercent" 
                 min="0" 
-                max="120" 
-                step="1"
+                max="150" 
+                step="5"
                 class="kpi-slider"
               />
               <div class="slider-value" :class="getSimulatedStatus(kpi.simulatedPercent)">
@@ -40,9 +50,11 @@
               </div>
             </div>
 
-            <button class="btn-save" @click="updateKPI(kpi)" :disabled="updatingId === kpi.id">
-              {{ updatingId === kpi.id ? 'Guardando...' : 'Guardar' }}
-            </button>
+            <div class="control-actions">
+              <button class="btn-save" @click="updateKPI(kpi)" :disabled="updatingId === kpi.id">
+                {{ updatingId === kpi.id ? '...' : 'Fijar' }}
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -58,23 +70,7 @@
         </div>
       </div>
 
-      <!-- PROTECCIÓN DE VISTA ADMIN (SIMULADA) -->
-      <div v-if="!isAuthenticated" class="admin-login-overlay">
-        <div class="login-card animate-pop">
-          <h3>🔐 Acceso Restringido: Admin</h3>
-          <p>Ingresa la contraseña maestra para ver analítica avanzada.</p>
-          <input 
-            type="password" 
-            v-model="passwordInput" 
-            placeholder="Password"
-            @keyup.enter="checkLogin"
-          />
-          <button @click="checkLogin">Entrar al Sistema</button>
-          <p v-if="loginError" class="error-msg">Contraseña incorrecta</p>
-        </div>
-      </div>
-
-      <div v-else class="analysis-grid">
+      <div class="analysis-grid">
         <!-- ÁRBOL DE DECISIÓN FUNCIONAL -->
         <section class="strategic-box">
           <h3>🧠 Centro de Mando: Acciones Estratégicas</h3>
@@ -253,18 +249,12 @@ const showKPIEditor = ref(false);
 const updatingId = ref(null);
 const executing = ref(false);
 
-// LOGIN LOGIC (ADMIN PROTECTED)
-const isAuthenticated = ref(false);
-const passwordInput = ref('');
-const loginError = ref(false);
-
-function checkLogin() {
-  if (passwordInput.value === 'elceiboadmin') {
-    isAuthenticated.value = true;
-    loginError.value = false;
-  } else {
-    loginError.value = true;
-  }
+// SIMULATION PRESETS
+function applyPreset(type) {
+  moduleKPIs.value.forEach(k => {
+    if (type === 'optimal') k.simulatedPercent = Math.min(100, Math.round(k.simulatedPercent * 1.2));
+    if (type === 'critical') k.simulatedPercent = Math.max(20, Math.round(k.simulatedPercent * 0.5));
+  });
 }
 
 // MATRIZ DE RIESGO DINÁMICA
@@ -626,6 +616,59 @@ function getIcon(key) {
 
 .btn-outline { background: none; border: 1px solid var(--ctp-surface2); color: var(--ctp-text); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
 .btn-outline:hover { border-color: var(--ctp-green); }
+
+/* ESTILOS EDITOR KPI AVANZADO */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.preset-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-mini {
+  background: var(--ctp-surface2);
+  color: var(--ctp-text);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-mini:hover {
+  background: var(--ctp-green);
+  color: var(--ctp-base);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.type-tag-mini {
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.type-tag-mini.kpi { background: rgba(166, 226, 46, 0.2); color: var(--ctp-green); }
+.type-tag-mini.kmi { background: rgba(137, 180, 250, 0.2); color: var(--ctp-blue); }
+
+.control-actions {
+  min-width: 60px;
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* NUEVOS ESTILOS: LOGIN ADMIN Y HEATMAP */
 .admin-login-overlay {
